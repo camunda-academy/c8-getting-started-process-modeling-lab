@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="6659024" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.1.0" camunda:diagramRelationId="b14a4911-58d0-4835-aa96-26568d1a91e4">
+  <bpmn:process id="CarInsuranceApplicationProcess" name="Car Insurance Application" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_InsuranceApplicationReceived" name="Insurance Application Received">
+      <bpmn:outgoing>Flow_Start-DetermineRiskLevel</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_ApplicationApproved" name="Application Approved">
+      <bpmn:incoming>Flow_ApproveApplication-ApplicationApproved</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_ApplicationRejected" name="Application Rejected">
+      <bpmn:incoming>Flow_RejectApplication-ApplicationRejected</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:businessRuleTask id="Task_DetermineRiskLevel" name="Determine Risk Level">
+      <bpmn:incoming>Flow_Start-DetermineRiskLevel</bpmn:incoming>
+      <bpmn:outgoing>Flow_DetermineRiskLevel-RiskLevel</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="Activity_08mvij4" name="Decide on Application">
+      <bpmn:incoming>Flow_RiskLevel-Yellow</bpmn:incoming>
+      <bpmn:outgoing>Flow_DecideApplication-ApplicationAccepted</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Activity_0yewvx5" name="Send Reminder">
+      <bpmn:incoming>Flow_DecideApplication-SendReminder</bpmn:incoming>
+      <bpmn:outgoing>Flow_SendReminder-ReminderSent</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:boundaryEvent id="Timer_Escalate" name="2 Days" attachedToRef="Activity_08mvij4">
+      <bpmn:outgoing>Flow_DecideApplication-SendReminder</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_01mtm7r" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="EndEvent_ReminderSent" name="Reminder Sent">
+      <bpmn:incoming>Flow_SendReminder-ReminderSent</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Gateway_RiskLevel" name="What is the Risk Level?">
+      <bpmn:incoming>Flow_DetermineRiskLevel-RiskLevel</bpmn:incoming>
+      <bpmn:outgoing>Flow_RiskLevel-Red</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RiskLevel-Yellow</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RiskLevel-Green</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_1ip6y8y">
+      <bpmn:incoming>Flow_RiskLevel-Red</bpmn:incoming>
+      <bpmn:incoming>Flow_Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approved-ApproveApplication</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_05exm4y">
+      <bpmn:incoming>Flow_Rejected</bpmn:incoming>
+      <bpmn:incoming>Flow_RiskLevel-Green</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rejected-RejectApplication</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_ApplicationAccepted" name="Application Accepted?">
+      <bpmn:incoming>Flow_DecideApplication-ApplicationAccepted</bpmn:incoming>
+      <bpmn:outgoing>Flow_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_Start-DetermineRiskLevel" sourceRef="StartEvent_InsuranceApplicationReceived" targetRef="Task_DetermineRiskLevel" />
+    <bpmn:sequenceFlow id="Flow_DetermineRiskLevel-RiskLevel" sourceRef="Task_DetermineRiskLevel" targetRef="Gateway_RiskLevel" />
+    <bpmn:sequenceFlow id="Flow_RiskLevel-Red" name="Green" sourceRef="Gateway_RiskLevel" targetRef="Gateway_1ip6y8y" />
+    <bpmn:sequenceFlow id="Flow_Approved-ApproveApplication" sourceRef="Gateway_1ip6y8y" targetRef="Task_ApproveApplication" />
+    <bpmn:sequenceFlow id="Flow_RiskLevel-Yellow" name="Yellow" sourceRef="Gateway_RiskLevel" targetRef="Activity_08mvij4" />
+    <bpmn:sequenceFlow id="Flow_DecideApplication-SendReminder" sourceRef="Timer_Escalate" targetRef="Activity_0yewvx5" />
+    <bpmn:sequenceFlow id="Flow_SendReminder-ReminderSent" sourceRef="Activity_0yewvx5" targetRef="EndEvent_ReminderSent" />
+    <bpmn:sequenceFlow id="Flow_DecideApplication-ApplicationAccepted" sourceRef="Activity_08mvij4" targetRef="Gateway_ApplicationAccepted" />
+    <bpmn:sequenceFlow id="Flow_Approved" name="Approved" sourceRef="Gateway_ApplicationAccepted" targetRef="Gateway_1ip6y8y" />
+    <bpmn:sequenceFlow id="Flow_Rejected" name="Rejected" sourceRef="Gateway_ApplicationAccepted" targetRef="Gateway_05exm4y" />
+    <bpmn:sequenceFlow id="Flow_Rejected-RejectApplication" sourceRef="Gateway_05exm4y" targetRef="Task_RejectApplication" />
+    <bpmn:sequenceFlow id="Flow_ApproveApplication-ApplicationApproved" sourceRef="Task_ApproveApplication" targetRef="EndEvent_ApplicationApproved" />
+    <bpmn:sequenceFlow id="Flow_RejectApplication-ApplicationRejected" sourceRef="Task_RejectApplication" targetRef="EndEvent_ApplicationRejected" />
+    <bpmn:sequenceFlow id="Flow_RiskLevel-Green" name="Red" sourceRef="Gateway_RiskLevel" targetRef="Gateway_05exm4y" />
+    <bpmn:serviceTask id="Task_ApproveApplication" name="Approve Application">
+      <bpmn:incoming>Flow_Approved-ApproveApplication</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApproveApplication-ApplicationApproved</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_RejectApplication" name="Reject Application">
+      <bpmn:incoming>Flow_Rejected-RejectApplication</bpmn:incoming>
+      <bpmn:outgoing>Flow_RejectApplication-ApplicationRejected</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:textAnnotation id="TextAnnotation_RiskLevel">
+      <bpmn:text>We will use the information from the application here</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1ubpusl" sourceRef="Task_DetermineRiskLevel" targetRef="TextAnnotation_RiskLevel" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="CarInsuranceApplicationProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_InsuranceApplicationReceived">
+        <dc:Bounds x="182" y="190" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="174" y="233" width="53" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1jo206n_di" bpmnElement="EndEvent_ApplicationApproved">
+        <dc:Bounds x="1302" y="190" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1294" y="233" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1xkpg2t_di" bpmnElement="EndEvent_ApplicationRejected">
+        <dc:Bounds x="1302" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1294" y="555" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05x0602_di" bpmnElement="Task_DetermineRiskLevel">
+        <dc:Bounds x="280" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0oyu02j_di" bpmnElement="Activity_08mvij4">
+        <dc:Bounds x="650" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07o29if_di" bpmnElement="Activity_0yewvx5">
+        <dc:Bounds x="790" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_00df8gv_di" bpmnElement="EndEvent_ReminderSent">
+        <dc:Bounds x="962" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="943" y="325" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1k0j5th_di" bpmnElement="Gateway_RiskLevel" isMarkerVisible="true">
+        <dc:Bounds x="445" y="183" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="430" y="145.5" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1ip6y8y_di" bpmnElement="Gateway_1ip6y8y" isMarkerVisible="true">
+        <dc:Bounds x="1045" y="183" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_05exm4y_di" bpmnElement="Gateway_05exm4y" isMarkerVisible="true">
+        <dc:Bounds x="1045" y="505" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0b7ohtf_di" bpmnElement="Gateway_ApplicationAccepted" isMarkerVisible="true">
+        <dc:Bounds x="1045" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124" y="370" width="53" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0qaovwq_di" bpmnElement="Task_ApproveApplication">
+        <dc:Bounds x="1140" y="168" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1wm4oyb_di" bpmnElement="Task_RejectApplication">
+        <dc:Bounds x="1140" y="490" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_0fp3xev_di" bpmnElement="TextAnnotation_RiskLevel">
+        <dc:Bounds x="380" y="80" width="210" height="40" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1mr6w1s_di" bpmnElement="Timer_Escalate">
+        <dc:Bounds x="682" y="322" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="652" y="313" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0qybdk1_di" bpmnElement="Flow_Start-DetermineRiskLevel">
+        <di:waypoint x="218" y="208" />
+        <di:waypoint x="280" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0tdypbs_di" bpmnElement="Flow_DetermineRiskLevel-RiskLevel">
+        <di:waypoint x="380" y="208" />
+        <di:waypoint x="445" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00l47fd_di" bpmnElement="Flow_RiskLevel-Red">
+        <di:waypoint x="495" y="208" />
+        <di:waypoint x="1045" y="208" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="524" y="190" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mnh5qt_di" bpmnElement="Flow_Approved-ApproveApplication">
+        <di:waypoint x="1095" y="208" />
+        <di:waypoint x="1140" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0e63jd3_di" bpmnElement="Flow_RiskLevel-Yellow">
+        <di:waypoint x="470" y="233" />
+        <di:waypoint x="470" y="380" />
+        <di:waypoint x="650" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="524" y="363" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1uefgnk_di" bpmnElement="Flow_DecideApplication-SendReminder">
+        <di:waypoint x="700" y="322" />
+        <di:waypoint x="700" y="300" />
+        <di:waypoint x="790" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1l2ijmo_di" bpmnElement="Flow_SendReminder-ReminderSent">
+        <di:waypoint x="890" y="300" />
+        <di:waypoint x="962" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xl94c9_di" bpmnElement="Flow_DecideApplication-ApplicationAccepted">
+        <di:waypoint x="750" y="380" />
+        <di:waypoint x="1045" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nbq23l_di" bpmnElement="Flow_Approved">
+        <di:waypoint x="1070" y="355" />
+        <di:waypoint x="1070" y="233" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1076" y="293" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11401x5_di" bpmnElement="Flow_Rejected">
+        <di:waypoint x="1070" y="405" />
+        <di:waypoint x="1070" y="505" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1078" y="452" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mreczr_di" bpmnElement="Flow_Rejected-RejectApplication">
+        <di:waypoint x="1095" y="530" />
+        <di:waypoint x="1140" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_029ibam_di" bpmnElement="Flow_ApproveApplication-ApplicationApproved">
+        <di:waypoint x="1240" y="208" />
+        <di:waypoint x="1302" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1him97m_di" bpmnElement="Flow_RejectApplication-ApplicationRejected">
+        <di:waypoint x="1240" y="530" />
+        <di:waypoint x="1302" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ptsny8_di" bpmnElement="Flow_RiskLevel-Green">
+        <di:waypoint x="470" y="233" />
+        <di:waypoint x="470" y="530" />
+        <di:waypoint x="1045" y="530" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="529" y="513" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_1ubpusl_di" bpmnElement="Association_1ubpusl">
+        <di:waypoint x="365" y="168" />
+        <di:waypoint x="408" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
